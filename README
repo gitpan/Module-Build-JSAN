@@ -1,0 +1,57 @@
+NAME
+    Module::Build::JSAN - Build JavaScript modules for JSAN
+
+SYNOPSIS
+      use Module::Build::JSAN;
+
+      my $build = Module::Build::JSAN->new(
+          module_name    => 'Foo-Bar',
+          license        => 'perl',
+          dist_author    => 'Joe Developer <joe@foobar.com>',
+          dist_abstract  => 'Say something pithy here',
+          dist_version   => '0.02',
+          keywords       => [qw(Foo Bar pithyness)],
+          build_requires => {
+              'Test.Simple' => 0.20,
+          },
+          requires     => {
+              'JSAN'     => 0.10,
+              'Baz-Quux' => 0.02,
+          },
+      );
+
+      $build->create_build_script;
+
+DESCRIPTION
+    This is a developer aid for creating JSAN distributions. Please use the
+    example given in the SYNOPSIS to create distributions.
+
+    This works nearly identically to Module::Build, so please refer to its
+    documentation.
+
+DIFFERENCES
+    1 META.json
+        JSAN uses the JSON format instead of the YAML format, as it's legal
+        Javascript and just plain easier to work with. This means that
+        Module::Build::JSAN will generate META.json files instead of
+        META.yml files. Do not be alarmed.
+
+    2 ./Build deps
+        This is a new action added in Module::Build::JSAN. You run this in
+        order to install your dependencies when testing while developing.
+        This will allow you to develop against the latest versions of the
+        distributions you are building upon.
+
+BUGS
+    Please send bug reports to <bug-module-build-jsan@rt.cpan.org>.
+
+AUTHORS
+    David Wheeler <david@kineticode.com> Casey West <casey@geeknest.com> Rob
+    Kinyon <rob.kinyon@iinteractive.com>
+
+COPYRIGHT AND LICENSE
+    Copyright 2005 by David Wheeler, Casey West, Rob Kinyon
+
+    This library is free software; you can redistribute it and/or modify it
+    under the same terms as Perl itself.
+
