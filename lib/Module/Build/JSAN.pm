@@ -3,10 +3,10 @@ package Module::Build::JSAN;
 use strict;
 use vars qw($VERSION @ISA);
 
-$VERSION = '0.01';
+$VERSION = '0.02';
 use Module::Build;
 @ISA = qw(Module::Build);
-use File::Spec::Functions qw(catdir);
+use File::Spec::Functions qw(catdir catfile);
 use File::Basename qw(dirname);
 
 sub new {
@@ -97,7 +97,7 @@ sub ACTION_dist {
     $self->depends_on('manifest');
 
     $self->depends_on('distdir');
-   
+
     my $dist_dir = $self->dist_dir;
 
     $self->_strip_pod($dist_dir);
@@ -106,8 +106,8 @@ sub ACTION_dist {
     $self->delete_filetree($dist_dir);
 
 
-    $self->add_to_cleanup('META.json');
-    $self->add_to_cleanup('*.gz');
+#    $self->add_to_cleanup('META.json');
+#    $self->add_to_cleanup('*.gz');
 }
 
 sub ACTION_manifest {
@@ -274,13 +274,16 @@ sub _strip_pod {
     my ($self, $dist_dir) = @_;
 
     require Pod::Stripper;
-    
+
     my $files    = $self->find_js_files;
     my $stripper = Pod::Stripper->new;
-    foreach my $file ( keys %{$files} ) {
-        # This will leave empty comment blocks in tact.
+    foreach my $from ( keys %{$files} ) {
+        my $to = catfile $dist_dir, $from;
+        # This will leave empty comment blocks intact.
         # That looks odd. Pod::Stripper::JSAN should be made.
-        $stripper->parse_from_file($file, "$dist_dir/$file");
+        chmod 0644, $to;
+        $stripper->parse_from_file($from => $to);
+        chmod 0444, $to;
     }
 }
 
@@ -292,37 +295,42 @@ __END__
 
 =head1 NAME
 
-Module::Build::JSAN - Build JavaScript modules for JSAN
+Module::Build::JSAN - Build JavaScript distributions for JSAN
 
 =head1 SYNOPSIS
+
+In F<Build.PL>:
 
   use Module::Build::JSAN;
 
   my $build = Module::Build::JSAN->new(
-      module_name    => 'Foo-Bar',
+      module_name    => 'Foo.Bar',
       license        => 'perl',
-      dist_author    => 'Joe Developer <joe@foobar.com>',
-      dist_abstract  => 'Say something pithy here',
-      dist_version   => '0.02',
       keywords       => [qw(Foo Bar pithyness)],
-      build_requires => {
-          'Test.Simple' => 0.20,
-      },
       requires     => {
           'JSAN'     => 0.10,
-          'Baz-Quux' => 0.02,
+          'Baz.Quux' => 0.02,
+      },
+      build_requires => {
+          'Test.Simple' => 0.20,
       },
   );
 
   $build->create_build_script;
 
+To build a distribution:
+
+  % perl Build.PL
+  % ./Build dist
+
 =head1 DESCRIPTION
 
-This is a developer aid for creating JSAN distributions. Please use the example
-given in the SYNOPSIS to create distributions.
+This is a developer aid for creating JSAN distributions. JSAN is the
+"JavaScript Archive Network," a JavaScript library akin to CPAN. Visit
+L<http://www.openjsan.org/> for details.
 
-This works nearly identically to L<Module::Build>, so please refer to its
-documentation.
+This module works nearly identically to L<Module::Build>, so please refer to
+its documentation.
 
 =head1 DIFFERENCES
 
@@ -330,15 +338,84 @@ documentation.
 
 =item 1 META.json
 
-JSAN uses the JSON format instead of the YAML format, as it's legal Javascript
-and just plain easier to work with. This means that Module::Build::JSAN will
-generate META.json files instead of META.yml files. Do not be alarmed.
+JSAN uses the JSON format instead of the YAML format for META files, as JSON
+is legal Javascript and just plain easier to work with. This means that
+Module::Build::JSAN will generate F<META.json> files instead of F<META.yml>
+files. Do not be alarmed. See L<http://www.json.org/> for more information on
+JSON.
 
 =item 2 ./Build deps
 
-This is a new action added in Module::Build::JSAN. You run this in order to
-install your dependencies when testing while developing. This will allow you to
-develop against the latest versions of the distributions you are building upon.
+This is a new action added to Module::Build::JSAN. Run this action in order to
+update your JSAN dependencies while developing your JSAN library. This will
+allow you to develop against the latest versions of the distributions upon
+which your library depends.
+
+=item 3. ./Build dist
+
+This action overrides that provided by Module::Build to extract all
+documentation from your source files or from F<doc/pod> and convert them into
+HTML and plain text representations in F<doc/html> and F<doc/text>,
+respectively. This keeps your F<.js> libraries free of the weight of
+documentation in the distribution.
+
+=item 4. Version, Abstract, Author
+
+Like Module::Build, Module::Build::JSAN will extract the module version
+number, abstract, and author from the JavaScript file for which the
+distribution is named. The abstract and author will only be extracted
+if they are specified in POD in the mode of Perl CPAN modules, i.e.:
+
+  /*
+
+  =head1 NAME
+
+  Foo.Bar - Foo your Bar, baby
+
+  =head1 AUTHOR
+
+  Joe Developer <joe@foobar.com>
+
+  */
+
+The version number will be parsed from the JavaScript code only if it is
+specified in one of the following manners:
+
+  Foo.Bar.VERSION = '0.34';
+
+  Foo.Bar = {
+      VERSION: '0.34'
+  }
+
+If none of these options works for you for some reason, just specify the
+abstract, author, and version number in your F<Build.PL> file:
+
+  my $build = Module::Build::JSAN->new(
+      module_name    => 'Foo.Bar',
+      dist_author    => 'Joe Developer <joe@foobar.com>',
+      dist_abstract  => 'Say something pithy here',
+      dist_version   => '0.34',
+      # ...
+  );
+
+=back
+
+=head1 SEE ALSO
+
+=over
+
+=item L<http://www.openjsan.org/>
+
+Home of the JavaScript Archive Network.
+
+=item L<http://www.json.org/>
+
+Home page for JSON, the JavaScript Object Notation, which the format used in
+the F<META.json> file generated by this module.
+
+=item L<http://justatheory.com/computers/programming/javascript/emulating_namespaces.html>
+
+The description of JavaScript namespaces on which JSAN modules are based.
 
 =back
 
@@ -348,16 +425,21 @@ Please send bug reports to <bug-module-build-jsan@rt.cpan.org>.
 
 =head1 AUTHORS
 
-David Wheeler <david@kineticode.com>
-Casey West <casey@geeknest.com>
-Rob Kinyon <rob.kinyon@iinteractive.com>
+=over
+
+=item David Wheeler <david@kineticode.com>
+
+=item Casey West <casey@geeknest.com>
+
+=item Rob Kinyon <rob.kinyon@gmail.com>
+
+=back
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2005 by David Wheeler, Casey West, Rob Kinyon
+Copyright 2005-2006 by David Wheeler, Casey West, and Rob Kinyon.
 
 This library is free software; you can redistribute it and/or modify it under
 the same terms as Perl itself.
 
 =cut
-

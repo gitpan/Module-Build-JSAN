@@ -1,8 +1,8 @@
 ---
 name: Module-Build-JSAN
-version: 0.01
+version: 0.02
 author: []
-abstract: Build JavaScript modules for JSAN
+abstract: Build JavaScript distributions for JSAN
 license: perl
 resources:
   license: http://dev.perl.org/licenses/
@@ -16,5 +16,8 @@ requires:
 provides:
   Module::Build::JSAN:
     file: lib/Module/Build/JSAN.pm
-    version: 0.01
-generated_by: Module::Build version 0.2702
+    version: 0.02
+generated_by: Module::Build version 0.2805
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.2.html
+  version: 1.2
