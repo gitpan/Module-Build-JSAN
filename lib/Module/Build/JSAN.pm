@@ -1,11 +1,11 @@
 package Module::Build::JSAN;
 
-# $Id: JSAN.pm 12 2008-03-31 23:56:43Z theory $
+# $Id: JSAN.pm 14 2008-04-01 00:00:07Z theory $
 
 use strict;
 use vars qw($VERSION @ISA);
 
-$VERSION = '0.03';
+$VERSION = '0.04';
 use Module::Build;
 @ISA = qw(Module::Build);
 use File::Spec::Functions qw(catdir catfile);
